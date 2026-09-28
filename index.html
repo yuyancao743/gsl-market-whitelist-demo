@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>中台 · 行情白名单</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/app.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">GH</div>
+        <div>
+          <div class="brand-name">Goldhorse MO</div>
+          <div class="brand-sub">中台运营</div>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-item active" type="button" data-view="list">行情白名单</button>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="chip">Demo V1.2</div>
+        <p>新增、增加市场实时生效。减少或更换市场写下月生效时间。港股L2、美股月费在「行情收费配置」中修改。</p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <h1 id="pageTitle">行情白名单</h1>
+          <p class="muted" id="pageDesc">列表内用户即具备实时行情资格。个人散户显示中文名称，EAM / IPI 显示英文名称。</p>
+        </div>
+        <div class="topbar-actions">
+          <span class="env" id="demoOperator">操作人 林晓</span>
+          <span class="env" id="demoDate">业务日</span>
+          <button class="btn ghost" id="btnRollDate" type="button">演示：到达下月 1 日</button>
+        </div>
+      </header>
+
+      <section class="view active" id="viewList">
+        <div class="toolbar">
+          <div class="toolbar-main">
+          <div class="filters">
+            <label>
+              用户类型
+              <select id="filterType">
+                <option value="all">全部</option>
+                <option value="retail">个人散户</option>
+                <option value="eam">EAM / IPI</option>
+              </select>
+            </label>
+            <label>
+              收费状态
+              <select id="filterCharge">
+                <option value="all">全部</option>
+                <option value="yes">收费</option>
+                <option value="no">不收费</option>
+              </select>
+            </label>
+            <label>
+              开通市场
+              <select id="filterMarket">
+                <option value="all">全部</option>
+                <option value="HK">港股L2</option>
+                <option value="US">美股</option>
+                <option value="ALL">全部市场</option>
+              </select>
+            </label>
+            <label>
+              关键词
+              <input id="filterKeyword" type="search" placeholder="客户名称 / 交易账号 / 金马号 / LPOA号" />
+            </label>
+          </div>
+          <div class="toolbar-btns">
+            <button class="btn ghost" id="btnExportHkex" type="button">导出港交所上报表单</button>
+            <button class="btn ghost" id="btnExportRetail" type="button">导出交易账户扣费表单</button>
+            <button class="btn ghost" id="btnExportEam" type="button">导出EAM扣费表单</button>
+            <button class="btn primary" id="btnAdd" type="button">新增</button>
+          </div>
+          </div>
+          <button class="btn ghost" id="btnOpenFees" type="button">行情收费配置</button>
+        </div>
+
+        <div class="callout">
+          新增、增加市场实时生效。减少或更换市场时填写<strong>预计生效日期</strong>（不早于下月 1 日），在此之前仍按原市场。收费变更当月生效。整笔移除写入预计失效时间，到期前记录保留，到达失效日后删除。
+          <span id="feeHint"></span>
+        </div>
+
+        <div class="panel">
+          <table class="data-table" id="usersTable">
+            <thead>
+              <tr>
+                <th>用户类型</th>
+                <th>客户名称</th>
+                <th>交易账号</th>
+                <th>金马号 / LPOA号</th>
+                <th>开通市场</th>
+                <th>是否收费</th>
+                <th>开通时间</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>            </tbody>
+          </table>
+        </div>
+        <div class="pager" id="userPager"></div>
+      </section>
+
+      <section class="view" id="viewFees">
+        <div class="callout">
+          港股L2实时行情默认每月 HKD 270，美股实时行情默认每月 HKD 100。修改后，本月扣费导出按新费用计算；全部市场按两项合计。
+        </div>
+        <div class="panel">
+          <div class="fee-bar">
+            <button class="btn ghost" id="btnFeeEdit" type="button">编辑</button>
+            <button class="btn ghost" id="btnFeeCancel" type="button" hidden>取消</button>
+            <button class="btn primary" id="btnFeeSave" type="button" hidden>保存</button>
+          </div>
+          <table class="data-table" id="feeTable">
+            <thead>
+              <tr>
+                <th>市场</th>
+                <th>每月费用（HKD）</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-backdrop" id="modal" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <header class="modal-head">
+        <h2 id="modalTitle">新增白名单用户</h2>
+        <button class="icon-btn" id="modalClose" aria-label="关闭" type="button">×</button>
+      </header>
+      <form id="userForm" class="modal-body">
+        <label>
+          用户类型
+          <select id="fType" required>
+            <option value="retail">个人散户</option>
+            <option value="eam">EAM / IPI</option>
+          </select>
+        </label>
+        <label id="tradeField">
+          交易账号
+          <input id="fTrade" required placeholder="例如 88010655" autocomplete="off" />
+        </label>
+        <label id="jinmaField">
+          金马号
+          <input id="fJinma" readonly placeholder="输入交易账号后自动填充" />
+        </label>
+        <label id="lpoaField" hidden>
+          LPOA号
+          <input id="fLpoa" placeholder="例如 LPOA-3318" autocomplete="off" />
+        </label>
+        <label>
+          客户名称
+          <input id="fName" readonly placeholder="自动填充" />
+        </label>
+        <label>
+          地址
+          <textarea id="fAddress" rows="3" placeholder="中文或英文均可"></textarea>
+        </label>
+        <label>
+          开通市场
+          <select id="fMarket" required>
+            <option value="HK">港股L2</option>
+            <option value="US">美股</option>
+            <option value="ALL">全部</option>
+          </select>
+        </label>
+        <label>
+          是否收费
+          <select id="fCharge" required>
+            <option value="no">不收费</option>
+            <option value="yes">收费</option>
+          </select>
+        </label>
+        <p class="form-hint">个人散户输入交易账号后自动填充金马号和中文名称。EAM / IPI 仍输入 LPOA号，自动填充英文名称。同一账号不可重复加入，新增实时生效。可试 88010655、LPOA-3318。</p>
+        <footer class="modal-foot">
+          <button type="button" class="btn ghost" id="modalCancel">取消</button>
+          <button type="submit" class="btn primary">确认</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="editModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true">
+      <header class="modal-head">
+        <h2>修改</h2>
+        <button class="icon-btn" id="editModalClose" aria-label="关闭" type="button">×</button>
+      </header>
+      <form id="editForm" class="modal-body">
+        <input type="hidden" id="editUserId" />
+        <p class="muted" id="editUserLabel"></p>
+        <p class="form-hint" id="editExpireLine" hidden></p>
+        <label>
+          地址
+          <textarea id="eAddress" rows="3" placeholder="中文或英文均可"></textarea>
+        </label>
+        <label>
+          开通市场
+          <select id="eMarket">
+            <option value="HK">港股L2</option>
+            <option value="US">美股</option>
+            <option value="ALL">全部</option>
+          </select>
+        </label>
+        <label id="effectiveDateField" hidden>
+          预计生效日期
+          <input id="eEffectiveAt" type="date" />
+        </label>
+        <label>
+          是否收费
+          <select id="eCharge">
+            <option value="no">不收费</option>
+            <option value="yes">收费</option>
+          </select>
+        </label>
+        <p class="form-hint" id="editHint">增加市场实时生效。减少或更换市场时填写预计生效日期，在此之前仍按原市场。收费变更当月生效。整笔移除写入预计失效时间。</p>
+        <footer class="modal-foot">
+          <button type="button" class="btn ghost" id="editModalCancel">取消</button>
+          <button type="submit" class="btn primary">保存</button>
+        </footer>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
